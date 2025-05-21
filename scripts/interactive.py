@@ -9,7 +9,7 @@ import mujoco.viewer
 from pynput import keyboard
 
 from mjx_safety_gym.envs.go_to_goal import GoToGoal
-import mjx_safety_gym.utils.lidar as lidar
+import mjx_safety_gym.lidar as lidar
 
 # import mujoco as mj
 
