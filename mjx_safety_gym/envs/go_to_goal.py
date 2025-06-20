@@ -1,10 +1,14 @@
 from typing import Mapping, Union
+import warnings
 
 import jax
 from mujoco import mjx
 import mujoco as mj
 import jax.numpy as jp
 from etils import epath
+import numpy as np
+
+from ml_collections import config_dict
 
 from mjx_safety_gym.collision import geoms_colliding
 from mjx_safety_gym.mjx_env import State, step
@@ -31,9 +35,29 @@ def domain_randomization(sys, rng, cfg):
     in_axes = jax.tree_map(lambda x: None, sys)
     return sys, in_axes, jp.zeros(())
 
+def default_vision_config() -> config_dict.ConfigDict:
+  return config_dict.create(
+      gpu_id=0,
+      render_batch_size=512,
+      render_width=64,
+      render_height=64,
+      enabled_geom_groups=[0, 1, 2],
+      use_rasterizer=False,
+      history=3,
+  )
+
+def _rgba_to_grayscale(rgba: jax.Array) -> jax.Array:
+  """
+  Intensity-weigh the colors.
+  This expects the input to have the channels in the last dim.
+  Values from ITU-R BT.60 standard for RGB to grayscale conversion.
+  """
+  r, g, b = rgba[..., 0], rgba[..., 1], rgba[..., 2]
+  gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+  return gray
 
 class GoToGoal:
-    def __init__(self):
+    def __init__(self, vision: bool=False, vision_config=default_vision_config()):
         self.spec = {
             "robot": ObjectSpec(0.4, 1),
             "goal": ObjectSpec(0.305, 1),
@@ -49,7 +73,35 @@ class GoToGoal:
 
         self._mjx_model = mjx.put_model(self._mj_model)
 
+        
+    
         self._post_init()
+
+        self._vision = vision
+        self._vision_config = vision_config 
+        if self._vision: 
+            try:
+                # pylint: disable=import-outside-toplevel
+                from madrona_mjx.renderer import BatchRenderer  # pytype: disable=import-error
+            except ImportError:
+                warnings.warn("Madrona MJX not installed. Cannot use vision with.")
+                return
+            self.renderer = BatchRenderer(
+                m=self._mjx_model,
+                gpu_id=self._vision_config.gpu_id,
+                num_worlds=self._vision_config.render_batch_size,
+                batch_render_view_width=self._vision_config.render_width,
+                batch_render_view_height=self._vision_config.render_height,
+                enabled_geom_groups=np.asarray(
+                    self._vision_config.enabled_geom_groups
+                ),
+                enabled_cameras=np.asarray([
+                    0,
+                ]),
+                add_cam_debug_geo=False,
+                use_rasterizer=self._vision_config.use_rasterizer,
+                viz_gpu_hdls=None,
+            )
 
     def _post_init(self) -> None:
         """Post initialization for the model."""
@@ -285,6 +337,16 @@ class GoToGoal:
 
         obs = self.get_obs(data)
 
+            # Vision observation instead 
+        if self._vision:
+            # Assume CNN takes grayscale images of dimensions (history, height, width)
+            render_token, rgb, _ = self.renderer.init(data, self._mjx_model)
+            info.update({"render_token": render_token})
+            obs = _rgba_to_grayscale(rgb[0].astype(jp.float32)) / 255.0 
+            obs_history = jp.tile(obs, (self._vision_config.history, 1, 1))
+            info.update({"obs_history": obs_history})
+            obs = {"pixels/view_0": obs_history.transpose(1, 2, 0)}
+
         return State(data, obs, jp.zeros(()), jp.zeros(()), {}, info)  # type: ignore
 
     def step(self, state: State, action: jax.Array) -> State:
@@ -311,6 +373,19 @@ class GoToGoal:
         done = done.astype(jp.float32)
 
         info = {"rng": rng, "cost": cost, "last_goal_dist": goal_dist}
+
+        if self._vision:
+            _, rgb, _ = self.renderer.render(state.info["render_token"], data)
+            # Update observation buffer
+            obs_history = state.info["obs_history"]
+            obs_history = jp.roll(obs_history, 1, axis=0)
+            obs_history = obs_history.at[0].set(
+                _rgba_to_grayscale(rgb[0].astype(jp.float32)) / 255.0
+            )
+            state.info["obs_history"] = obs_history
+            obs = {"pixels/view_0": obs_history.transpose(1, 2, 0)}
+
+            return State(data, obs, reward, done, state.metrics, state.info)
 
         return State(
             data=data,

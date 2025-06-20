@@ -13,5 +13,5 @@ setup(
         "mujoco-mjx==3.3.2",
         "pynput==1.8.1",
     ],
-    python_requires=">=3.10",  # Adjust according to your project compatibility
+    python_requires=">=3.11",  # TODO: Go to 3.11 
 )

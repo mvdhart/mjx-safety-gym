@@ -1,4 +1,17 @@
 # mjx-safety-gym
+
+## Setup
+Create a Python venv with version 3.11 (or above). 
+
+Then, 
+```pip install -r requirements.txt```
+After whcih 
+```pip install -e .``` 
+To install the module 
+
+If you want to use vision-based observations, see the Madrona section first. 
+
+## How to Run 
 Open-source MJX implementation of OpenAI Safety Gym for accelerated safe reinforcement learning.
 
 To run the interactive viewer on MacOS M1, run
