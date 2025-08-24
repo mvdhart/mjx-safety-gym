@@ -5,7 +5,7 @@ import jax
 from mujoco import mjx
 import mujoco as mj
 import jax.numpy as jp
-from etils import epath
+from importlib.resources import files
 import numpy as np
 
 from ml_collections import config_dict
@@ -21,7 +21,7 @@ from mjx_safety_gym.world import (
     draw_until_valid,
 )
 
-_XML_PATH = epath.Path(__file__).parent / "xmls" / "point.xml"
+_XML_PATH = files("mjx_safety_gym.envs.xmls") / "point.xml"
 
 Observation = Union[jax.Array, Mapping[str, jax.Array]]
 BASE_SENSORS = ["accelerometer", "velocimeter", "gyro", "magnetometer"]
