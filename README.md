@@ -4,8 +4,6 @@ Provides lightweight safety environments with **JAX + MuJoCo** that can run both
 
 This codebase is modeled after [DeepMind’s `mujoco_playground`](https://github.com/google-deepmind/mujoco_playground). You can use it in a similar way — for example, by creating a Brax wrapper around the environments and training them directly with Brax.
 
-Initially, we have just implemented the GoToGoal environment 
-![Go-to-Goal Environment](images/go_to_goal.png)
 ---
 
 ## Installation
