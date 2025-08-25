@@ -8,7 +8,7 @@ version = "0.1.1"
 description = "MJX Safety Gym Environments"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Apache License" }
+license-files = ["LICENSE"]
 authors = [
   { name = "Max van der Hart", email = "your.email@example.com" }
 ]
