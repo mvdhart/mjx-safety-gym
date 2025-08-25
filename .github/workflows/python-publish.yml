@@ -30,7 +30,7 @@ jobs:
         run: python -m build
       
       - name: Debug secret
-        run: echo "Token length: ${#TWINE_PASSWORD}" 
+        run: echo "Token length ${#TWINE_PASSWORD}" 
         env:
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
 
