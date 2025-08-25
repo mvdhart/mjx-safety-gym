@@ -22,7 +22,7 @@ dependencies = [
   "mujoco_mjx==3.3.2",
   "numpy==2.3.2",
   "pynput==1.8.1",
-  "setuptools==65.5.0",
+  "setuptools>=68.0.0",
 ]
 
 [project.urls]
