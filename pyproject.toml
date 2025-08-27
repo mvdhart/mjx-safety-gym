@@ -41,6 +41,7 @@ include-package-data = true
 
 # Configuration for bump-my-version
 # When running "bump-my-version patch (or minor/major)", this will update the version in the specified files
+# Do this before publishing a new release to PyPI
 [tool.bumpversion]
 current_version = "0.1.5"
 commit = true
