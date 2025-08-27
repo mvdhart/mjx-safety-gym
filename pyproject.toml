@@ -25,6 +25,11 @@ dependencies = [
   "setuptools>=68.0.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+  "bump-my-version>=1.0.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/mvdhart/mjx-safety-gym"
 
@@ -33,3 +38,14 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 "mjx_safety_gym.envs" = ["xmls/*.xml"]
+
+# Configuration for bump-my-version
+# When running "bump-my-version patch (or minor/major)", this will update the version in the specified files
+[tool.bumpversion]
+current_version = "0.1.5"
+commit = true
+tag = true
+
+[tool.bumpversion.files]
+"pyproject.toml" = { search = 'version = "{current_version}"', replace = 'version = "{new_version}"' }
+"src/mjx_safety_gym/__init__.py" = { search = '__version__ = "{current_version}"', replace = '__version__ = "{new_version}"' }
